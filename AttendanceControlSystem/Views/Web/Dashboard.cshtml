@@ -1,0 +1,873 @@
+@{
+    ViewData["Title"] = "داشبورد";
+    ViewData["Page"] = "dashboard";
+}
+
+<div class="page-heading">
+    <div>
+        <h1>داشبورد</h1>
+        <p class="muted-text">نمای کلی وضعیت سامانه</p>
+    </div</p>
+    </div>
+
+    <button id="button button-secondary"
+            type="button">
+        به‌روزرسانی
+    </button>
+</div>
+
+<section class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-icon blue">افراد</div>
+        <div>
+            <span class="stat-label">تعداد افراد</span>
+            <strong id="statPeople" class="stat-value">—</strong>
+        </div>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-icon green">واحد</div>
+        <div>
+            <span class="stat-label">تعداد واحددر ادامه کد کامل فایل‌های Views ارائه شده است. این نسخه فرض می‌کند رابط کاربری از طریق JavaScript به APIهای موجود متصل می‌شود و JWT در `localStorage` ذخیره می‌گردد.
+
+---
+
+# ۱. `Views/Shared/_ViewImports.cshtml`
+```cshtml
+@using AttendanceControlSystem
+@using AttendanceControlSystem.Models
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+---
+
+# ۲. `Views/Shared/_ViewStart.cshtml`
+
+cshtml
+@{
+Layout = "_Layout";
+}
+
+---
+
+# ۳. `Views/Shared/_Layout.cshtml`
+
+cshtml
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<title>@ViewData["Title"] - سامانه کنترل تردد</title>
+
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" />
+
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+<link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+
+<div id="appShell" class="app-shell d-none">
+
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-brand">
+<i class="bi bi-shield-check"></i>
+<span>کنترل تردد</span>
+</div>
+
+<nav class="sidebar-nav">
+<a class="nav-link" href="/Web/Dashboard">
+<i class="bi bi-speedometer2"></i>
+<span>داشبورد</span>
+</a>
+
+<a class="nav-link" href="/Web/People">
+<i class="bi bi-people"></i>
+<span>اشخاص</span>
+</a>
+
+<a class="nav-link" href="/Web/Units">
+<i class="bi bi-diagram-3"></i>
+<span>واحدها</span>
+</a>
+
+<a class="nav-link" href="/Web/Attendance">
+<i class="bi bi-clock-history"></i>
+<span>تردد</span>
+</a>
+
+<a class="nav-link" href="/Web/Reports">
+<i class="bi bi-bar-chart"></i>
+<span>گزارش‌ها</span>
+</a>
+
+<a class="nav-link admin-only" href="/Web/Users">
+<i class="bi bi-person-gear"></i>
+<span>کاربران</span>
+</a>
+
+<a class="nav-link admin-only" href="/Web/Backup">
+<i class="bi bi-database"></i>
+<span>پشتیبان‌گیری</span>
+</a>
+</nav>
+
+<div class="sidebar-footer">
+<button type="button" class="btn btn-outline-light btn-sm w-100" id="logoutButton">
+<i class="bi bi-box-arrow-right"></i>
+خروج
+</button>
+</div>
+</aside>
+
+<main class="main-content">
+
+<header class="topbar">
+<button type="button" class="btn btn-light d-lg-none" id="sidebarToggle">
+<i class="bi bi-list"></i>
+</button>
+
+<div class="topbar-title">
+<span id="pageTitle">@ViewData["Title"]</span>
+</div>
+
+<div class="user-info">
+<i class="bi bi-person-circle"></i>
+<span id="currentUsername">کاربر</span>
+<span class="badge text-bg-primary" id="currentRole"></span>
+</div>
+</header>
+
+<div class="content-wrapper">
+<div id="globalAlert" class="alert d-none" role="alert"></div>
+
+@RenderBody()
+</div>
+
+</main>
+</div>
+
+<div id="loginShell">
+@if (ViewContext.RouteData.Values["action"]?.ToString() == "Login")
+{
+@RenderBody()
+}
+</div>
+
+<div id="loadingOverlay" class="loading-overlay d-none">
+<div class="spinner-border text-primary" role="status">
+<span class="visually-hidden">در حال بارگذاری...</span>
+</div>
+<div class="mt-2">در حال پردازش...</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/app.js"></script>
+
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+---
+
+# ۴. `Views/Web/Login.cshtml`
+
+cshtml
+@{
+ViewData["Title"] = "ورود به سامانه";
+Layout = "_Layout";
+}
+
+<div class="login-page">
+<div class="login-card">
+
+<div class="login-logo">
+<i class="bi bi-shield-check"></i>
+</div>
+
+<h1 class="login-title">سامانه کنترل تردد</h1>
+<p class="login-subtitle">ورود به پنل مدیریت</p>
+
+<div id="loginAlert" class="alert d-none" role="alert"></div>
+
+<form id="loginForm" novalidate>
+
+<div class="mb-3">
+<label for="username" class="form-label">نام کاربری</label>
+
+<div class="input-group">
+<span class="input-group-text">
+<i class="bi bi-person"></i>
+</span>
+
+<input id="username"
+name="username"
+class="form-control"
+autocomplete="username"
+required />
+</div>
+
+<div class="invalid-feedback">
+نام کاربری را وارد کنید.
+</div>
+</div>
+
+<div class="mb-3">
+<label for="password" class="form-label">رمز عبور</label>
+
+<div class="input-group">
+<span class="input-group-text">
+<i class="bi bi-lock"></i>
+</span>
+
+<input id="password"
+name="password"
+type="password"
+class="form-control"
+autocomplete="current-password"
+required />
+
+<button type="button"
+class="btn btn-outline-secondary"
+id="togglePassword">
+<i class="bi bi-eye"></i>
+</button>
+</div>
+
+<div class="invalid-feedback">
+رمز عبور را وارد کنید.
+</div>
+</div>
+
+<button type="submit" class="btn btn-primary w-100" id="loginButton">
+<i class="bi bi-box-arrow-in-right"></i>
+ورود
+</button>
+</form>
+
+<div class="text-center mt-4 text-muted small">
+سامانه کنترل تردد
+</div>
+</div>
+</div>
+
+---
+
+# ۵. `Views/Web/Dashboard.cshtml`
+
+cshtml
+@{
+ViewData["Title"] = "داشبورد";
+}
+
+<div class="page-header">
+<div>
+<h1>داشبورد</h1>
+<p class="text-muted">نمای کلی وضعیت سامانه</p>
+</div>
+
+<button class="btn btn-outline-primary" id="refreshDashboard">
+<i class="bi bi-arrow-clockwise"></i>
+به‌روزرسانی
+</button>
+</div>
+
+<div class="row g-4 mb-4">
+
+<div class="col-sm-6 col-xl-3">
+<div class="stat-card stat-primary">
+<div class="stat-icon">
+<i class="bi bi-people"></i>
+</div>
+<div>
+<div class="stat-label">تعداد اشخاص</div>
+<div class="stat-value" id="totalPeople">۰</div>
+</div>
+</div>
+</div>
+
+<div class="col-sm-6 col-xl-3">
+<div class="stat-card stat-success">
+<div class="stat-icon">
+<i class="bi bi-person-check"></i>
+</div>
+<div>
+<div class="stat-label">حاضرین</div>
+<div class="stat-value" id="presentPeople">۰</div>
+</div>
+</div>
+</div>
+
+<div class="col-sm-6 col-xl-3">
+<div class="stat-card stat-warning">
+<div class="stat-icon">
+<i class="bi bi-building"></i>
+</div>
+<div>
+<div class="stat-label">واحدها</div>
+<div class="stat-value" id="totalUnits">۰</div>
+</div>
+</div>
+</div>
+
+<div class="col-sm-6 col-xl-3">
+<div class="stat-card stat-danger">
+<div class="stat-icon">
+<i class="bi bi-clock"></i>
+</div>
+<div>
+<div class="stat-label">تردد امروز</div>
+<div class="stat-value" id="todayAttendance">۰</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="card">
+<div class="card-header">
+<h5 class="mb-0">
+<i class="bi bi-info-circle"></i>
+وضعیت سامانه
+</h5>
+</div>
+
+<div class="card-body">
+<div id="dashboardMessage" class="text-muted">
+در حال دریافت اطلاعات...
+</div>
+</div>
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+App.requireAuth();
+DashboardPage.init();
+});
+</script>
+}
+
+---
+
+# ۶. `Views/Web/People.cshtml`
+
+cshtml
+@{
+ViewData["Title"] = "اشخاص";
+}
+
+<div class="page-header">
+<div>
+<h1>اشخاص</h1>
+<p class="text-muted">مدیریت اطلاعات افراد سامانه</p>
+</div>
+
+<button class="btn btn-primary" id="newPersonButton">
+<i class="bi bi-plus-lg"></i>
+شخص جدید
+</button>
+</div>
+
+<div class="card mb-4">
+<div class="card-body">
+<form id="peopleSearchForm" class="row g-2">
+<div class="col-md-10">
+<input id="peopleSearch"
+class="form-control"
+placeholder="جست‌وجو بر اساس نام، کد ملی یا شماره پرسنلی..." />
+</div>
+
+<div class="col-md-2">
+<button class="btn btn-outline-primary w-100" type="submit">
+<i class="bi bi-search"></i>
+جست‌وجو
+</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header d-flex justify-content-between align-items-center">
+<h5 class="mb-0">فهرست اشخاص</h5>
+<span class="badge text-bg-secondary" id="peopleCount">۰</span>
+</div>
+
+<div class="table-responsive">
+<table class="table table-hover align-middle mb-0">
+<thead>
+<tr>
+<th>نام و نام خانوادگی</th>
+<th>کد ملی</th>
+<th>شماره پرسنلی</th>
+<th>واحد</th>
+<th>وضعیت</th>
+<th>عملیات</th>
+</tr>
+</thead>
+
+<tbody id="peopleTableBody">
+<tr>
+<td colspan="6" class="text-center text-muted py-4">
+در حال بارگذاری...
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="modal fade" id="personModal" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog modal-lg">
+<div class="modal-content">
+
+<div class="modal-header">
+<h5 class="modal-title" id="personModalTitle">شخص جدید</h5>
+<button type="button" class="btn-close ms-0" data-bs-dismiss="modal"></button>
+</div>
+
+<form id="personForm">
+<div class="modal-body">
+<input type="hidden" id="personId" />
+
+<div id="personFormAlert" class="alert d-none"></div>
+
+<div class="row g-3">
+
+<div class="col-md-6">
+<label class="form-label" for="firstName">نام</label>
+<input id="firstName" class="form-control" required />
+</div>
+
+<div class="col-md-6">
+<label class="form-label" for="lastName">نام خانوادگی</label>
+<input id="lastName" class="form-control" required />
+</div>
+
+<div class="col-md-6">
+<label class="form-label" for="nationalId">کد ملی</label>
+<input id="nationalId"
+class="form-control"
+maxlength="10"
+required />
+</div>
+
+<div class="col-md-6">
+<label class="form-label" for="personnelCode">شماره پرسنلی</label>
+<input id="personnelCode" class="form-control" />
+</div>
+
+<div class="col-md-6">
+<label class="form-label" for="phone">شماره تماس</label>
+<input id="phone" class="form-control" />
+</div>
+
+<div class="col-md-6">
+<label class="form-label" for="unitId">واحد</label>
+<select id="unitId" class="form-select">
+<option value="">انتخاب واحد</option>
+</select>
+</div>
+
+<div class="col-12">
+<div class="form-check">
+<input id="isActive"
+class="form-check-input"
+type="checkbox"
+checked />
+<label class="form-check-label" for="isActive">
+فعال
+</label>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+انصراف
+</button>
+
+<button type="submit" class="btn btn-primary">
+ذخیره
+</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+App.requireAuth();
+PeoplePage.init();
+});
+</script>
+}
+
+---
+
+# ۷. `Views/Web/Units.cshtml`
+
+cshtml
+@{
+ViewData["Title"] = "واحدها";
+}
+
+<div class="page-header">
+<div>
+<h1>واحدها</h1>
+<p class="text-muted">مدیریت واحدهای سازمانی</p>
+</div>
+
+<button class="btn btn-primary admin-only" id="newUnitButton">
+<i class="bi bi-plus-lg"></i>
+واحد جدید
+</button>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h5 class="mb-0">فهرست واحدها</h5>
+</div>
+
+<div class="table-responsive">
+<table class="table table-hover align-middle mb-0">
+<thead>
+<tr>
+<th>عنوان واحد</th>
+<th>کد واحد</th>
+<th>توضیحات</th>
+<th>وضعیت</th>
+<th>عملیات</th>
+</tr>
+</thead>
+
+<tbody id="unitsTableBody">
+<tr>
+<td colspan="5" class="text-center text-muted py-4">
+در حال بارگذاری...
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="modal fade" id="unitModal" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog">
+<div class="modal-content">
+
+<div class="modal-header">
+<h5 class="modal-title" id="unitModalTitle">واحد جدید</h5>
+<button type="button" class="btn-close ms-0" data-bs-dismiss="modal"></button>
+</div>
+
+<form id="unitForm">
+<div class="modal-body">
+<input type="hidden" id="unitId" />
+
+<div id="unitFormAlert" class="alert d-none"></div>
+
+<div class="mb-3">
+<label class="form-label" for="unitName">نام واحد</label>
+<input id="unitName" class="form-control" required />
+</div>
+
+<div class="mb-3">
+<label class="form-label" for="unitCode">کد واحد</label>
+<input id="unitCode" class="form-control" />
+</div>
+
+<div class="mb-3">
+<label class="form-label" for="unitDescription">توضیحات</label>
+<textarea id="unitDescription"
+class="form-control"
+rows="3"></textarea>
+</div>
+</div>
+
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+انصراف
+</button>
+
+<button type="submit" class="btn btn-primary">
+ذخیره
+</button>
+</div>
+</form>
+
+</div>
+</div>
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+App.requireAuth();
+UnitsPage.init();
+});
+</script>
+}
+
+---
+
+# ۸. `Views/Web/Attendance.cshtml`
+
+cshtml
+@{
+ViewData["Title"] = "تردد";
+}
+
+<div class="page-header">
+<div>
+<h1>ثبت و مشاهده تردد</h1>
+<p class="text-muted">ثبت ورود و خروج افراد</p>
+</div>
+</div>
+
+<div class="row g-4 mb-4">
+
+<div class="col-lg-6">
+<div class="card h-100">
+<div class="card-header">
+<h5 class="mb-0">
+<i class="bi bi-box-arrow-in-left"></i>
+ثبت ورود
+</h5>
+</div>
+
+<div class="card-body">
+<form id="entryForm">
+<div class="mb-3">
+<label class="form-label" for="entryNationalId">
+کد ملی
+</label>
+
+<input id="entryNationalId"
+class="form-control"
+maxlength="10"
+required />
+</div>
+
+<button type="submit" class="btn btn-success">
+<i class="bi bi-check-lg"></i>
+ثبت ورود
+</button>
+</form>
+</div>
+</div>
+</div>
+
+<div class="col-lg-6">
+<div class="card h-100">
+<div class="card-header">
+<h5 class="mb-0">
+<i class="bi bi-box-arrow-right"></i>
+ثبت خروج
+</h5>
+</div>
+
+<div class="card-body">
+<form id="exitForm">
+<div class="mb-3">
+<label class="form-label" for="exitNationalId">
+کد ملی
+</label>
+
+<input id="exitNationalId"
+class="form-control"
+maxlength="10"
+required />
+</div>
+
+<button type="submit" class="btn btn-warning">
+<i class="bi bi-check-lg"></i>
+ثبت خروج
+</button>
+</form>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="card">
+<div class="card-header d-flex justify-content-between align-items-center">
+<h5 class="mb-0">افراد حاضر</h5>
+
+<button type="button" class="btn btn-sm btn-outline-primary" id="refreshPresent">
+<i class="bi bi-arrow-clockwise"></i>
+به‌روزرسانی
+</button>
+</div>
+
+<div class="table-responsive">
+<table class="table table-hover align-middle mb-0">
+<thead>
+<tr>
+<th>نام</th>
+<th>کد ملی</th>
+<th>زمان ورود</th>
+<th>عملیات</th>
+</tr>
+</thead>
+
+<tbody id="presentTableBody">
+<tr>
+<td colspan="4" class="text-center text-muted py-4">
+در حال بارگذاری...
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+App.requireAuth();
+AttendancePage.init();
+});
+</script>
+}
+
+---
+
+# ۹. `Views/Web/Reports.cshtml`
+
+cshtml
+@{
+ViewData["Title"] = "گزارش‌ها";
+}
+
+<div class="page-header">
+<div>
+<h1>گزارش‌ها</h1>
+<p class="text-muted">جست‌وجو و دریافت گزارش تردد</p>
+</div>
+</div>
+
+<div class="card mb-4">
+<div class="card-body">
+<form id="reportForm" class="row g-3">
+
+<div class="col-md-3">
+<label class="form-label" for="reportFrom">
+از تاریخ
+</label>
+
+<input id="reportFrom"
+type="date"
+class="form-control" />
+</div>
+
+<div class="col-md-3">
+<label class="form-label" for="reportTo">
+تا تاریخ
+</label>
+
+<input id="reportTo"
+type="date"
+class="form-control" />
+</div>
+
+<div class="col-md-3">
+<label class="form-label" for="reportNationalId">
+کد ملی
+</label>
+
+<input id="reportNationalId"
+class="form-control" />
+</div>
+
+<div class="col-md-3 d-flex align-items-end gap-2">
+<button type="submit" class="btn btn-primary flex-fill">
+<i class="bi bi-search"></i>
+جست‌وجو
+</button>
+
+<button type="button" class="btn btn-outline-success" id="exportReport">
+<i class="bi bi-download"></i>
+</button>
+</div>
+
+</form>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h5 class="mb-0">نتایج گزارش</h5>
+</div>
+
+<div class="table-responsive">
+<table class="table table-hover align-middle mb-0">
+<thead>
+<tr>
+<th>نام</th>
+<th>کد ملی</th>
+<th>تاریخ</th>
+<th>ورود</th>
+<th>خروج</th>
+<th>مدت حضور</th>
+</tr>
+</thead>
+
+<tbody id="reportsTableBody">
+<tr>
+<td colspan="6" class="text-center text-muted py-4">
+برای مشاهده گزارش جست‌وجو کنید.
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+App.requireAuth();
+ReportsPage.init();
+});
+</script>
+}
+
+---
+
+# ۱۰. `Views/Web/Users.cshtml`
+
+cshtml
+@{
+ViewData["Title"] = "کاربران";
+}
+
+<div class="page-header">
+<div>
+<h1>کاربران سامانه</h1>
+<p class="text-muted">مدیریت حساب‌های کاربری</p>
+</div>
+
+<button class="btn btn-primary" id="newUserButton">
+<i class="bi bi-person-plus"></i>
+کاربر جدید
+</button>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h5 class="mb-0">فهرست کاربران</h5>
+</div>
+
+<div class="table-responsive">
+<table class="table table-hover align-middle mb-0">
+<thead>

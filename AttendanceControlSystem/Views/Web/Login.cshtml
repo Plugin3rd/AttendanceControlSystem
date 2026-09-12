@@ -1,0 +1,52 @@
+@{
+    ViewData["Title"] = "ورود";
+    ViewData["Page"] = "login";
+}
+
+<div class="login-page">
+    <section class="login-card">
+        <div class="login-logo">ت</div>
+
+        <h1>سامانه کنترل تردد</h1>
+        <p class="muted-text">
+            برای ورود، نام کاربری و رمز عبور خود را وارد کنید.
+        </p>
+
+        <form id="loginForm" novalidate>
+            <div class="form-group">
+                <label for="username">نام کاربری</label>
+                <input id="username"
+                       name="username"
+                       type="text"
+                       autocomplete="username"
+                       required
+                       maxlength="100"
+                       placeholder="نام کاربری را وارد کنید" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">رمز عبور</label>
+                <input id="password"
+                       name="password"
+                       type="password"
+                       autocomplete="current-password"
+                       required
+                       minlength="6"
+                       maxlength="200"
+                       placeholder="رمز عبور را وارد کنید" />
+            </div>
+
+            <button id="loginSubmit"
+                    type="submit"
+                    class="button button-primary button-block">
+                ورود به سامانه
+            </button>
+
+            <div id="loginStatus"
+                 class="status"
+                 role="alert"
+                 hidden>
+            </div>
+        </form>
+    </section>
+</div>

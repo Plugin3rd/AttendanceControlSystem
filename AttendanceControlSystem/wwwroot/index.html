@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>کنترل تردد</title>
+  <style>
+    * { box-sizing: border-box }
+    body {
+      margin: 0;
+      background: #f1f5f9;
+      color: #172033;
+      font: 15px Tahoma, Arial, sans-serif;
+    }
+    header {
+      background: #123047;
+      color: white;
+      padding: 20px;
+    }
+    main { max-width: 1150px; margin: auto; padding: 18px }
+    h1 { font-size: 23px }
+    h2 { font-size:px }
+    h2 { font-size: 19px }
+    .card {
+     px solid #dce4ec;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }
+    input, button {
+      padding: 11px;
+      border: 1px solid #bdcbd8;
+      border-radius: 7px;
+      font: inherit;
+    }
+    input { max-width: 100%; background: white }
+    button {
+      cursor: pointer;
+      background: #126b83;
+      color: white;
+      border: none;
+    }
+    button:hover { background: #0b5268 }
+    button:disabled { opacity: .5; cursor: wait }
+    .danger { background: #a63232 }
+    .secondary { background: #516477 }
+    nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px }
+    .scroll { overflow-x: auto }
+    table { width: 100%; border-collapse: collapse; white-space: nowrap }
+    th, td { text-align: right; padding: 12px; border-bottom: 1px solid #e2e8f0 }
+    th { background: #edf3f8 }
+    #message {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      z-index: 100;
+      padding: 15px;
+      border-radius: 8px;
+      background: #123047;
+      color: white;
+    }
+    #lock {
+      position: fixed;
+      inset: 0;
+      background: #e8eff7;
+      z-index: 90;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+    [hidden] { display: none !important }
+    .muted { color: #637487; line-height: 1.9 }
+    #stats { font-size: 19px; line-height: 2 }
+    @media(max-width: 600px) {
+      .row input, .row button { width: 100% }
+      main { padding: 10px }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>سامانه کنترل تردد افراد</h1>
+  <span id="identity">نسخهٔ پایه</span>
+</header>
+
+<main>
+  <section id="loginBox" class="card">
+    <h2>ورود به سامانه</h2>
+    <form id="loginForm" class="row">
+      <input id="username" placeholder="نام کاربری"
+             autocomplete="username" required>
+      <input id="password" type="password" placeholder="رمز عبور"
+             autocomplete="current-password" required>
+      <button>ورود</button>
+    </form>
+  </section>
+
+  <div id="workspace" hidden>
+    <nav>
+      <button data-tab="home">داشبورد</button>
+      <button data-tab="movement">ورود و خروج</button>
+      <button
