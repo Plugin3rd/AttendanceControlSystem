@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Abbas\\AttendanceControlSystem\\AttendanceControlSystem\\AttendanceControlSystem.csproj": {}
+    "D:\\AttendanceControlSystem\\AttendanceControlSystem\\AttendanceControlSystem.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Abbas\\AttendanceControlSystem\\AttendanceControlSystem\\AttendanceControlSystem.csproj": {
+    "D:\\AttendanceControlSystem\\AttendanceControlSystem\\AttendanceControlSystem.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Abbas\\AttendanceControlSystem\\AttendanceControlSystem\\AttendanceControlSystem.csproj",
+        "projectUniqueName": "D:\\AttendanceControlSystem\\AttendanceControlSystem\\AttendanceControlSystem.csproj",
         "projectName": "AttendanceControlSystem",
-        "projectPath": "C:\\Users\\Abbas\\AttendanceControlSystem\\AttendanceControlSystem\\AttendanceControlSystem.csproj",
+        "projectPath": "D:\\AttendanceControlSystem\\AttendanceControlSystem\\AttendanceControlSystem.csproj",
         "packagesPath": "C:\\Users\\Abbas\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Abbas\\AttendanceControlSystem\\AttendanceControlSystem\\obj\\",
+        "outputPath": "D:\\AttendanceControlSystem\\AttendanceControlSystem\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Abbas\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -46,7 +46,7 @@
           "framework": "net8.0",
           "targetAlias": "net8.0",
           "dependencies": {
-            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+            "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation": {
               "target": "Package",
               "version": "[8.0.19, )"
             },
@@ -63,10 +63,6 @@
             "Microsoft.EntityFrameworkCore.Sqlite": {
               "target": "Package",
               "version": "[8.0.19, )"
-            },
-            "Swashbuckle.AspNetCore": {
-              "target": "Package",
-              "version": "[6.6.2, )"
             }
           },
           "imports": [
