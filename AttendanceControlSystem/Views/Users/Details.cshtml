@@ -1,0 +1,46 @@
+@model AttendanceControlSystem.Models.User
+@{
+    ViewData["Title"] = "جزئیات کاربر";
+}
+
+<h2>جزئیات کاربر</h2>
+
+<div>
+    <h4>اطلاعات کاربر</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">شناسه</dt>
+        <dd class="col-sm-9">@Model.Id</dd>
+
+        <dt class="col-sm-3">نام کاربری</dt>
+        <dd class="col-sm-9">@Model.Username</dd>
+
+        <dt class="col-sm-3">نقش</dt>
+        <dd class="col-sm-9">
+            @(Model.Role == AttendanceControlSystem.Models.UserRole.Admin ? "مدیر (Admin)" : "اپراتور (Operator)")
+        </dd>
+
+        <dt class="col-sm-3">وضعیت</dt>
+        <dd class="col-sm-9">@(Model.IsActive ? "فعال" : "غیرفعال")</dd>
+
+        <dt class="col-sm-3">قفل حساب</dt>
+        <dd class="col-sm-9">@(Model.IsLocked ? "قفل‌شده" : "باز")</dd>
+
+        <dt class="col-sm-3">تاریخ ثبت</dt>
+        <dd class="col-sm-9">@Model.CreatedAtUtc.ToString("yyyy/MM/dd HH:mm") UTC</dd>
+
+        <dt class="col-sm-3">آخرین ورود</dt>
+        <dd class="col-sm-9">@(Model.LastLoginAtUtc?.ToString("yyyy/MM/dd HH:mm") ?? "-") UTC</dd>
+
+        <dt class="col-sm-3">آخرین فعالیت</dt>
+        <dd class="col-sm-9">@(Model.LastActivityAt?.ToString("yyyy/MM/dd HH:mm") ?? "-")</dd>
+
+        <dt class="col-sm-3">تاریخ قفل</dt>
+        <dd class="col-sm-9">@(Model.LockedAt?.ToString("yyyy/MM/dd HH:mm") ?? "-")</dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-controller="Users" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+    <a asp-controller="Users" asp-action="Index" class="btn btn-sm btn-link">بازگشت</a>
+</div>

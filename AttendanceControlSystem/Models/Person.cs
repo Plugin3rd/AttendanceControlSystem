@@ -30,8 +30,7 @@ public sealed class Person
 
     public Unit? Unit { get; set; }
 
-    public DateTime CreatedAtUtc { get; set; } =
-        DateTime.UtcNow;
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime? UpdatedAtUtc { get; set; }
 }

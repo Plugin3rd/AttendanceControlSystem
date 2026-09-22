@@ -1,0 +1,67 @@
+@model AttendanceControlSystem_vm.PeopleIndexViewModel
+@{
+    ViewData["Title"] = "افراد";
+    var totalPages = ViewBag.TotalPages as int? ?? 0;
+}
+<h2>افراد</h2>
+<form asp-controller="People" asp-action="Index" method="get" class="search-form">
+    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+    <input type="text" name="search" value="@Model.Search" placeholder="جستجو در نام، نام خانوادگی، کد ملی، تلفن یا سازمان" />
+    <button type="submit" class="btn btn-secondary">جستجو</button>
+    <a asp-controller="People" asp-action="Index" class="btn btn-secondary">پاک کردن جستجو</a>
+</form>
+<a asp-controller="People" asp-action="Create" class="btn btn-primary">افزودن فرد جدید</a>
+<table class="table">
+    <thead>
+        <tr>
+            <th>نام</th>
+            <th>نام خانوادگی</th>
+            <th>کد ملی</th>
+            <th>تلفن</th>
+            <th>واحد</th>
+            <th>وضعیت</th>
+            <th>عملیات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.FirstName</td>
+                <td>@item.LastName</td>
+                <td>@item.NationalId</td>
+                <td>@item.Phone</td>
+                <td>@(item.Unit is null ? "بدون واحد" : item.Unit.IsActive ? item.Unit.Name : $"{item.Unit.Name} (غیرفعال)")</td>
+                <td>@(item.IsActive ? "فعال" : "غیرفعال")</td>
+                <td>
+                    <a asp-controller="People" asp-action="Edit" asp-route-id="@item.Id">ویرایش</a> |
+                    <a asp-controller="People" asp-action="Details" asp-route-id="@item.Id">جزئیات</a> |
+                    <form asp-controller="People" asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('آیا از حذف نرم این فرد مطمئن هستید؟')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-link">حذف نرم</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (!Model.Items.Any())
+        {
+            <tr>
+                <td colspan="7">موردی یافت نشد.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+@if (Model.Total > 0)
+{
+    <div class="pagination">
+        <span>صفحه @Model.Page از @totalPages</span>
+        @if (Model.Page > 1)
+        {
+            <a asp-controller="People" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search">قبلی</a>
+        }
+        @if (Model.Page < totalPages)
+        {
+            <a asp-controller="People" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search">بعدی</a>
+        }
+    </div>
+}

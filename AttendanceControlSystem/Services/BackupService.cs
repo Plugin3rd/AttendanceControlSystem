@@ -2,12 +2,13 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
 
 namespace AttendanceControlSystem.Services;
 
 public record BackupFileInfo(string Name, long Size, DateTime Created);
 
-public sealed class BackupService
+public sealed partial class BackupService
 {
     private readonly IConfiguration _configuration;
     private readonly IHostEnvironment _environment;
@@ -25,79 +26,62 @@ public sealed class BackupService
 
     public (string Name, long Size, string? Error) CreateBackup()
     {
-        return CreateBackupAsync(CancellationToken.None)
-            .GetAwaiter()
-            .GetResult();
+        return CreateBackupAsync(CancellationToken.None).GetAwaiter().GetResult();
     }
 
     public async Task<(string Name, long Size, string? Error)> CreateBackupAsync(
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-
-        var databasePath = GetDatabasePath();
-
-        if (!File.Exists(databasePath))
-        {
-            return (null!, 0, "فایل پایگاه داده پیدا نشد.");
-        }
-
-        var backupDirectory = Path.Combine(
-            _environment.ContentRootPath,
-            "App_Data",
-            "Backups");
-
-        Directory.CreateDirectory(backupDirectory);
-
-        var backupFileName =
-            $"attendance-{DateTime.Now:yyyyMMdd-HHmmss-fff}.db";
-
-        var backupPath = Path.Combine(
-            backupDirectory,
-            backupFileName);
+        string? backupPath = null;
 
         try
         {
-            var sourceConnectionString =
-                new SqliteConnectionStringBuilder
-                {
-                    DataSource = databasePath,
-                    Mode = SqliteOpenMode.ReadOnly
-                }.ToString();
-
-            var destinationConnectionString =
-                new SqliteConnectionStringBuilder
-                {
-                    DataSource = backupPath,
-                    Mode = SqliteOpenMode.ReadWriteCreate
-                }.ToString();
-
-            await using var sourceConnection =
-                new SqliteConnection(sourceConnectionString);
-
-            await using var destinationConnection =
-                new SqliteConnection(destinationConnectionString);
-
-            await sourceConnection.OpenAsync(cancellationToken);
-            await destinationConnection.OpenAsync(cancellationToken);
-
-            sourceConnection.BackupDatabase(destinationConnection);
-
-            _logger.LogInformation(
-                "Database backup created at {BackupPath}",
-                backupPath);
-
-            var fileInfo = new FileInfo(backupPath);
-            return (backupFileName, fileInfo.Length, null);
-        }
-        catch
-        {
-            if (File.Exists(backupPath))
+            var databasePath = GetDatabasePath();
+            if (!File.Exists(databasePath))
             {
-                File.Delete(backupPath);
+                return (string.Empty, 0, "فایل پایگاه داده پیدا نشد.");
             }
 
-            return (null!, 0, "خطا در ایجاد نسخه پشتیبان.");
+            var backupDirectory = GetBackupDirectory();
+            Directory.CreateDirectory(backupDirectory);
+            backupPath = GetAvailableBackupPath(backupDirectory);
+
+            var sourceConnectionString = new SqliteConnectionStringBuilder
+            {
+                DataSource = databasePath,
+                Mode = SqliteOpenMode.ReadOnly
+            }.ToString();
+
+            var destinationConnectionString = new SqliteConnectionStringBuilder
+            {
+                DataSource = backupPath,
+                Mode = SqliteOpenMode.ReadWriteCreate
+            }.ToString();
+
+            await using var sourceConnection = new SqliteConnection(sourceConnectionString);
+            await using var destinationConnection = new SqliteConnection(destinationConnectionString);
+            await sourceConnection.OpenAsync(cancellationToken);
+            await destinationConnection.OpenAsync(cancellationToken);
+            await Task.Run(
+                () => sourceConnection.BackupDatabase(destinationConnection),
+                CancellationToken.None);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var fileInfo = new FileInfo(backupPath);
+            _logger.LogInformation("Database backup created at {BackupPath}", backupPath);
+            return (Path.GetFileName(backupPath), fileInfo.Length, null);
+        }
+        catch (OperationCanceledException)
+        {
+            DeletePartialBackup(backupPath);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            DeletePartialBackup(backupPath);
+            _logger.LogError(exception, "Database backup failed.");
+            return (string.Empty, 0, "خطا در ایجاد نسخه پشتیبان.");
         }
     }
 
@@ -107,13 +91,36 @@ public sealed class BackupService
         return CreateBackupAsync(cancellationToken);
     }
 
+    public (byte[]? Content, string? FileName) Download(string name)
+    {
+        return DownloadAsync(name, CancellationToken.None).GetAwaiter().GetResult();
+    }
+
+    public async Task<(byte[]? Content, string? FileName)> DownloadAsync(
+        string name,
+        CancellationToken cancellationToken = default)
+    {
+        var path = GetDownloadPath(name);
+        if (path is null)
+        {
+            return (null, null);
+        }
+
+        try
+        {
+            var content = await File.ReadAllBytesAsync(path, cancellationToken);
+            return (content, Path.GetFileName(path));
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger.LogError(exception, "Database backup download failed for {BackupName}.", name);
+            return (null, null);
+        }
+    }
+
     public IEnumerable<BackupFileInfo> List()
     {
-        var backupDirectory = Path.Combine(
-            _environment.ContentRootPath,
-            "App_Data",
-            "Backups");
-
+        var backupDirectory = GetBackupDirectory();
         if (!Directory.Exists(backupDirectory))
         {
             return Enumerable.Empty<BackupFileInfo>();
@@ -128,66 +135,115 @@ public sealed class BackupService
                     fileInfo.Length,
                     fileInfo.CreationTimeUtc);
             })
-            .OrderByDescending(b => b.Created);
+            .OrderByDescending(backup => backup.Created);
     }
 
-    public (byte[]? Content, string? FileName) Download(string name)
+    public string? GetDownloadPath(string name)
     {
-        if (string.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(name)
+            || !BackupFileNameRegex().IsMatch(name))
         {
-            return (null, null);
+            return null;
         }
 
-        var backupDirectory = Path.Combine(
-            _environment.ContentRootPath,
-            "App_Data",
-            "Backups");
-
-        var backupPath = Path.Combine(backupDirectory, name);
-
-        if (!File.Exists(backupPath))
+        try
         {
-            return (null, null);
-        }
+            var backupDirectory = Path.GetFullPath(GetBackupDirectory());
+            var candidate = Path.GetFullPath(Path.Combine(backupDirectory, name));
+            var rootWithSeparator = Path.TrimEndingDirectorySeparator(backupDirectory)
+                + Path.DirectorySeparatorChar;
+            if (!candidate.StartsWith(rootWithSeparator, StringComparison.OrdinalIgnoreCase)
+                && !candidate.Equals(backupDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
 
-        return (File.ReadAllBytes(backupPath), name);
+            return File.Exists(candidate) ? candidate : null;
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger.LogWarning(exception, "Invalid backup download path was rejected.");
+            return null;
+        }
+    }
+
+    private string GetBackupDirectory()
+    {
+        return Path.Combine(_environment.ContentRootPath, "App_Data", "Backups");
     }
 
     private string GetDatabasePath()
     {
-        var connectionString =
-            _configuration.GetConnectionString("DefaultConnection")
-            ?? _configuration["ConnectionStrings:Default"]
-            ?? "Data Source=App_Data/attendance.db";
-
-        var connectionBuilder =
-            new SqliteConnectionStringBuilder(connectionString);
-
-        var dataSource = connectionBuilder.DataSource;
-
+        var connectionString = _configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
+        var dataSource = new SqliteConnectionStringBuilder(connectionString).DataSource;
         if (string.IsNullOrWhiteSpace(dataSource))
         {
             dataSource = "App_Data/attendance.db";
         }
 
-        if (dataSource.Equals(
-                ":memory:",
-                StringComparison.OrdinalIgnoreCase))
+        if (dataSource.Equals(":memory:", StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException(
-                "برای پایگاه دادهٔ حافظه‌ای امکان تهیهٔ نسخهٔ پشتیبان وجود ندارد.");
+            throw new InvalidOperationException("تهیه نسخه پشتیبان از پایگاه داده حافظه‌ای امکان‌پذیر نیست.");
+        }
+
+        if (dataSource.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                var uri = new Uri(dataSource);
+                if (uri.IsFile)
+                {
+                    dataSource = uri.LocalPath;
+                }
+            }
+            catch (UriFormatException)
+            {
+                dataSource = dataSource["file:".Length..];
+            }
         }
 
         dataSource = dataSource.Trim('"');
+        return Path.IsPathRooted(dataSource)
+            ? dataSource
+            : Path.GetFullPath(Path.Combine(_environment.ContentRootPath, dataSource));
+    }
 
-        if (Path.IsPathRooted(dataSource))
+    private static string GetAvailableBackupPath(string backupDirectory)
+    {
+        for (var attempt = 0; attempt < 100; attempt++)
         {
-            return dataSource;
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff");
+            var candidate = Path.Combine(backupDirectory, $"attendance-{timestamp}.db");
+            if (!File.Exists(candidate))
+            {
+                return candidate;
+            }
         }
 
-        return Path.GetFullPath(
-            Path.Combine(
-                _environment.ContentRootPath,
-                dataSource));
+        return Path.Combine(backupDirectory, $"attendance-{DateTime.UtcNow:yyyyMMdd-HHmmss}-999.db");
     }
+
+    private void DeletePartialBackup(string? backupPath)
+    {
+        if (string.IsNullOrWhiteSpace(backupPath))
+        {
+            return;
+        }
+
+        try
+        {
+            if (File.Exists(backupPath))
+            {
+                File.Delete(backupPath);
+            }
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Could not delete partial backup {BackupPath}.", backupPath);
+        }
+    }
+
+    [GeneratedRegex(@"^attendance-\d{8}-\d{6}-\d{3}\.db$", RegexOptions.CultureInvariant)]
+    private static partial Regex BackupFileNameRegex();
 }

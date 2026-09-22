@@ -1,112 +1,79 @@
 @{
-    var page = Convert.ToString(ViewData["Page"]) ?? "";
-    var title = Convert.To title = Convert.ToString(ViewData["Title"]) ?? "ردد";
-    var isLoginPage = page.Equals("login", StringComparison.OrdinalIgnoreCase);
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var role = User.FindFirst(ClaimTypes.Role)?.Value;
 }
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <title>@title - سامانه کنترل تردد</title>
-
-    <meta name="theme-color" content="#17324d" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <meta name="theme-color" content="#123047" />
+    <title>@ViewData["Title"] - سامانه کنترل تردد</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+    @RenderSection("Styles", required: false)
 </head>
-
-<body data-page="@page">
-
-@if (!isLoginPage)
-{
-    <header class="app-header">
+<body>
+    <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
+    <header class="site-header">
         <div class="header-inner">
-            <a class="brand" href="@Url.Action("Dashboard", "Web")">
-                <span class="brand-symbol">ت</span>
-                <span>
-                    <strong>سامانه کنترل تردد</strong>
-                    <small>مدیریت ورود و خروج</small>
-                </span>
+            <a class="brand" asp-controller="Dashboard" asp-action="Index" aria-label="سامانه کنترل تردد">
+                <span class="brand-mark" aria-hidden="true">ت</span>
+                <span>سامانه کنترل تردد</span>
             </a>
-
-            <button classsmall>
-                </span>
-            </a>
-
-            <button class="mobile-menu-button"
--label="نمایش منو">
-                ☰
+            <button class="menu-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false">
+                <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span>منو</span>
             </button>
-
-            <nav class="main-nav" id="mainNav">
-                <a href="@Url.Action("Dashboard", "Web")"
-                   data-nav="dashboard">
-                    داشبورد
-                </a>
-
-                <a href="@Url.Action("People", "Web")"
-                   data-nav="people">
-                    افراد
-                </a>
-
-                <a href="@Url.Action("Units", "Web")"
-                   data-nav="units">
-                    واحدها
-                </a>
-
-                <a href="@Url.Action("Attendance", "Web")"
-                   data-nav="attendance">
-                    تردد
-                </a>
-
-                <a href="@Url.Action("Reports", "Web")"
-                   data-nav="reports">
-                    گزارش‌ها
-                </a>
-
-                <a href="@Url.Action("Users", "Web")"
-                   data-nav="users"
-                   data-admin-only>
-                    کاربران
-                </a>
-
-                <a href="@Url.Action("Backup", "Web")"
-                   data-nav="backup"
-                   data-admin-only>
-                    پشتیبان‌گیری
-                </a>
+            <nav class="primary-nav" id="primary-navigation" aria-label="منوی اصلی">
+                <ul class="nav-list">
+                    <li><a class="nav-link" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+                    <li><a class="nav-link" asp-controller="People" asp-action="Index">افراد</a></li>
+                    <li><a class="nav-link" asp-controller="Units" asp-action="Index">واحدها</a></li>
+                    <li><a class="nav-link" asp-controller="Attendance" asp-action="Index">ورود و خروج</a></li>
+                    <li><a class="nav-link" asp-controller="Reports" asp-action="Index">گزارشات</a></li>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li><a class="nav-link" asp-controller="Users" asp-action="Index">کاربران</a></li>
+                        <li><a class="nav-link" asp-controller="Backup" asp-action="Index">پشتیبان‌گیری</a></li>
+                    }
+                </ul>
             </nav>
-
-            <div class="user-menu">
-                <span id="currentUser" class="current-user">کاربر</span>
-                <button id="logoutButton" class="button button-light button-small" type="button">
-                    خروج
-                </button>
+            <div class="user-area">
+                <span class="user-name">
+                    @if (isAuthenticated)
+                    {
+                        <text>سلام، @(User.Identity?.Name ?? "کاربر")</text>
+                    }
+                    else
+                    {
+                        <text>کاربر</text>
+                    }
+                </span>
+                @if (!string.IsNullOrWhiteSpace(role))
+                {
+                    <span class="role-badge @(role == "Admin" ? "role-admin" : "")">@role</span>
+                }
+                @if (isAuthenticated)
+                {
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
+                        @Html.AntiForgeryToken()
+                        <button class="logout-button" type="submit">خروج</button>
+                    </form>
+                }
+                else
+                {
+                    <a class="login-link" asp-controller="Account" asp-action="Login">ورود</a>
+                }
             </div>
         </div>
     </header>
-}
-
-<main class="page-container">
-    @if (!isLoginPage)
-    {
-        <div id="globalStatus" class="status" role="alert" hidden></div>
-    }
-
-    @RenderBody()
-</main>
-
-@if (!isLoginPage)
-{
-    <footer class="app-footer">
-        سامانه کنترل تردد
+    <main id="main-content" class="site-main">
+        @RenderBody()
+    </main>
+    <footer class="site-footer">
+        <p>&copy; @DateTime.Now.Year سامانه کنترل تردد</p>
     </footer>
-}
-
-<script src="~/js/app.js" asp-append-version="true"></script>
-
-@await RenderSectionAsync("Scripts", required: false)
-
+    <script src="~/js/site.js"></script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

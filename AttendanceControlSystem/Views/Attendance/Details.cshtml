@@ -1,0 +1,32 @@
+@model AttendanceControlSystem.Models.AttendanceRecord
+@{
+    ViewData["Title"] = "جزئیات رکورد";
+}
+<h2>جزئیات رکورد</h2>
+<div>
+    <h4>اطلاعات ورود/خروج</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>نام</dt>
+        <dd>@(Model.Person?.FirstName ?? "") @(Model.Person?.LastName ?? "")</dd>
+        <dt>کد ملی</dt>
+        <dd>@(Model.Person?.NationalId ?? "")</dd>
+        <dt>واحد</dt>
+        <dd>@(Model.Unit?.Name ?? "-")</dd>
+        <dt>زمان ورود</dt>
+        <dd>@Model.EntryAtUtc.ToString("yyyy/MM/dd HH:mm")</dd>
+        <dt>زمان خروج</dt>
+        <dd>@(Model.ExitAtUtc?.ToString("yyyy/MM/dd HH:mm") ?? "-")</dd>
+        <dt>توضیحات ورود</dt>
+        <dd>@(string.IsNullOrWhiteSpace(Model.EntryDescription) ? "-" : Model.EntryDescription)</dd>
+        <dt>توضیحات خروج</dt>
+        <dd>@(string.IsNullOrWhiteSpace(Model.ExitDescription) ? "-" : Model.ExitDescription)</dd>
+        <dt>یادداشت</dt>
+        <dd>@(string.IsNullOrWhiteSpace(Model.Note) ? "-" : Model.Note)</dd>
+        <dt>ثبت‌کننده</dt>
+        <dd>@(Model.RegisteredByUser?.Username ?? (Model.RegisteredByUserId?.ToString() ?? "-"))</dd>
+    </dl>
+</div>
+<div>
+    <a asp-controller="Attendance" asp-action="Index">بازگشت</a>
+</div>

@@ -1,0 +1,40 @@
+@model AttendanceControlSystem.Models.Person
+@{
+    ViewData["Title"] = "جزئیات فرد";
+}
+<h2>جزئیات فرد</h2>
+<div>
+    <h4>اطلاعات شخصی</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>نام</dt>
+        <dd>@Model.FirstName</dd>
+        <dt>نام خانوادگی</dt>
+        <dd>@Model.LastName</dd>
+        <dt>کد ملی</dt>
+        <dd>@Model.NationalId</dd>
+        <dt>تلفن</dt>
+        <dd>@Model.Phone</dd>
+        <dt>سازمان</dt>
+        <dd>@Model.Organization</dd>
+        <dt>واحد</dt>
+        <dd>@(Model.Unit is null ? "بدون واحد" : Model.Unit.IsActive ? Model.Unit.Name : $"{Model.Unit.Name} (غیرفعال)")</dd>
+        <dt>وضعیت</dt>
+        <dd>@(Model.IsActive ? "فعال" : "غیرفعال")</dd>
+        <dt>تاریخ ثبت</dt>
+        <dd>@Model.CreatedAtUtc.ToString("yyyy/MM/dd HH:mm")</dd>
+        @if (Model.UpdatedAtUtc.HasValue)
+        {
+            <dt>تاریخ آخرین به‌روزرسانی</dt>
+            <dd>@Model.UpdatedAtUtc.Value.ToString("yyyy/MM/dd HH:mm")</dd>
+        }
+    </dl>
+</div>
+<div>
+    <a asp-controller="People" asp-action="Edit" asp-route-id="@Model.Id">ویرایش</a> |
+    <a asp-controller="People" asp-action="Index">بازگشت</a>
+</div>
+<form asp-controller="People" asp-action="Delete" asp-route-id="@Model.Id" method="post" style="display:inline" onsubmit="return confirm('آیا از حذف نرم این فرد مطمئن هستید؟')">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn-link">حذف نرم</button>
+</form>

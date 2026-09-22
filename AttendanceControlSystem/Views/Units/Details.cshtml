@@ -1,0 +1,27 @@
+@model AttendanceControlSystem.Models.Unit
+@{
+    ViewData["Title"] = "جزئیات واحد";
+}
+<h2>جزئیات واحد</h2>
+<div>
+    <h4>اطلاعات واحد</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>نام</dt>
+        <dd>@Model.Name</dd>
+        <dt>توضیحات</dt>
+        <dd>@Model.Description</dd>
+        <dt>وضعیت</dt>
+        <dd>@(Model.IsActive ? "فعال" : "غیرفعال")</dd>
+        <dt>تاریخ ثبت</dt>
+        <dd>@Model.CreatedAtUtc.ToString("yyyy/MM/dd HH:mm")</dd>
+    </dl>
+</div>
+<div>
+    <a asp-controller="Units" asp-action="Edit" asp-route-id="@Model.Id">ویرایش</a> |
+    <a asp-controller="Units" asp-action="Index">بازگشت</a>
+</div>
+<form asp-controller="Units" asp-action="Delete" asp-route-id="@Model.Id" method="post" style="display:inline" onsubmit="return confirm('آیا از حذف نرم این واحد مطمئن هستید؟')">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn-link">حذف نرم</button>
+</form>

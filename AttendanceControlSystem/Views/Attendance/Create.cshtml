@@ -1,0 +1,33 @@
+@model AttendanceControlSystem_vm.AttendanceCreateViewModel
+@{
+    ViewData["Title"] = "ثبت ورود";
+}
+<h2>ثبت ورود</h2>
+<form asp-controller="Attendance" asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="NationalId"></label>
+        <input asp-for="NationalId" inputmode="numeric" maxlength="10" autocomplete="off" />
+        <span asp-validation-for="NationalId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="UnitId"></label>
+        <select asp-for="UnitId" asp-items="ViewBag.Units">
+            <option value="">انتخاب واحد</option>
+        </select>
+        <span asp-validation-for="UnitId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Note"></label>
+        <input asp-for="Note" maxlength="1000" />
+        <span asp-validation-for="Note" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        <input asp-for="Description" maxlength="500" />
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">ثبت ورود</button>
+    <a asp-controller="Attendance" asp-action="Index">بازگشت</a>
+</form>

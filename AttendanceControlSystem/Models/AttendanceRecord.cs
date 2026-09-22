@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace AttendanceControlSystem.Models;
 
 public sealed class AttendanceRecord
@@ -8,12 +10,17 @@ public sealed class AttendanceRecord
 
     public Person Person { get; set; } = null!;
 
+    [Required]
     public DateTime EntryAtUtc { get; set; }
 
     public DateTime? ExitAtUtc { get; set; }
 
+    [Required]
+    [MaxLength(500)]
     public string EntryDescription { get; set; } = string.Empty;
 
+    [Required]
+    [MaxLength(500)]
     public string ExitDescription { get; set; } = string.Empty;
 
     public int? RegisteredByUserId { get; set; }
@@ -24,5 +31,7 @@ public sealed class AttendanceRecord
 
     public Unit? Unit { get; set; }
 
+    [Required]
+    [MaxLength(1000)]
     public string Note { get; set; } = string.Empty;
 }

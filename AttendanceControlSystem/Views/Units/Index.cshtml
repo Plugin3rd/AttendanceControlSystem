@@ -1,0 +1,64 @@
+@model IEnumerable<AttendanceControlSystem.Models.Unit>
+@{
+    ViewData["Title"] = "واحدها";
+    var totalPages = ViewBag.TotalPages as int? ?? 0;
+    var search = ViewBag.Search as string ?? string.Empty;
+    var pageSize = ViewBag.PageSize as int? ?? 20;
+}
+<h2>واحدها</h2>
+<form asp-controller="Units" asp-action="Index" method="get" class="search-form">
+    <input type="hidden" name="pageSize" value="@pageSize" />
+    <input type="text" name="search" value="@search" placeholder="جستجو در نام یا توضیحات واحد" />
+    <button type="submit" class="btn btn-secondary">جستجو</button>
+    <a asp-controller="Units" asp-action="Index" class="btn btn-secondary">پاک کردن جستجو</a>
+</form>
+<a asp-controller="Units" asp-action="Create" class="btn btn-primary">افزودن واحد جدید</a>
+<table class="table">
+    <thead>
+        <tr>
+            <th>نام</th>
+            <th>توضیحات</th>
+            <th>وضعیت</th>
+            <th>عملیات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Description</td>
+                <td>@(item.IsActive ? "فعال" : "غیرفعال")</td>
+                <td>
+                    <a asp-controller="Units" asp-action="Edit" asp-route-id="@item.Id">ویرایش</a> |
+                    <a asp-controller="Units" asp-action="Details" asp-route-id="@item.Id">جزئیات</a> |
+                    <form asp-controller="Units" asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('آیا از حذف نرم این واحد مطمئن هستید؟')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-link">حذف نرم</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="4">موردی یافت نشد.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+@if (totalPages > 0)
+{
+    var currentPage = ViewBag.Page as int? ?? 1;
+    <div class="pagination">
+        <span>صفحه @currentPage از @totalPages</span>
+        @if (currentPage > 1)
+        {
+            <a asp-controller="Units" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-pageSize="@pageSize" asp-route-search="@search">قبلی</a>
+        }
+        @if (currentPage < totalPages)
+        {
+            <a asp-controller="Units" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-pageSize="@pageSize" asp-route-search="@search">بعدی</a>
+        }
+    </div>
+}

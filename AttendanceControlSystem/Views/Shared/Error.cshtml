@@ -1,0 +1,30 @@
+@model AttendanceControlSystem_vm.ErrorViewModel
+@using Microsoft.AspNetCore.Diagnostics
+@{
+    ViewData["Title"] = "خطا";
+    var errorMessage = ViewData["ErrorMessage"] as string;
+    var requestId = ViewData["RequestId"] as string;
+    var exception = Context.Features.Get<IExceptionHandlerFeature>()?.Error;
+    var message = string.IsNullOrWhiteSpace(Model?.Message)
+        ? (string.IsNullOrWhiteSpace(errorMessage)
+            ? "متأسفانه خطایی رخ داد. لطفاً دوباره تلاش کنید."
+            : errorMessage)
+        : Model.Message;
+}
+<section class="error-page" aria-labelledby="error-title">
+    <div class="error-card card">
+        <div class="error-icon" aria-hidden="true">!</div>
+        <p class="eyebrow">خطای سامانه</p>
+        <h1 id="error-title">خطا</h1>
+        <p class="error-message">@message</p>
+        @if (exception is not null)
+        {
+            <p class="error-note">جزئیات خطا در ثبت رویدادهای سامانه ثبت شده است.</p>
+        }
+        @if (Model?.ShowRequestId == true || !string.IsNullOrWhiteSpace(requestId))
+        {
+            <p class="request-id">شناسه درخواست: <code>@(Model?.RequestId ?? requestId)</code></p>
+        }
+        <a class="btn btn-primary" asp-controller="Dashboard" asp-action="Index">بازگشت به داشبورد</a>
+    </div>
+</section>

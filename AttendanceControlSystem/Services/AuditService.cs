@@ -1,55 +1,52 @@
-using System.Globalization;
-using System.Reflection;
 using AttendanceControlSystem.Data;
 using AttendanceControlSystem.Models;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace AttendanceControlSystem.Services;
 
 public sealed class AuditService
 {
-    private readonly AttendanceDbContext _dbContext;
+    private const int ActionMaxLength = 100;
+    private const int DetailsMaxLength = 1000;
+    private const int UsernameMaxLength = 50;
+    private const int IpAddressMaxLength = 100;
 
-    public AuditService(AttendanceDbContext dbContext)
+    private readonly AttendanceDbContext _dbContext;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public AuditService(
+        AttendanceDbContext dbContext,
+        IHttpContextAccessor httpContextAccessor)
     {
         _dbContext = dbContext;
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public void Add(
+        string action,
+        string? entityName = null,
+        string? details = null,
+        string? username = null,
+        int? userId = null)
+    {
+        _dbContext.AuditLogs.Add(CreateLog(action, entityName, details, username, userId));
     }
 
     public async Task LogAsync(
         string action,
         string? entityName = null,
         string? details = null,
-        CancellationToken cancellationToken = default)
+        bool saveChanges = true,
+        CancellationToken cancellationToken = default,
+        string? username = null,
+        int? userId = null)
     {
-        if (string.IsNullOrWhiteSpace(action))
+        Add(action, entityName, details, username, userId);
+        if (saveChanges)
         {
-            action = "Unknown";
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
-
-        var auditLog = new AuditLog();
-
-        SetProperty(
-            auditLog,
-            new[] { "Action", "Operation", "EventType" },
-            action);
-
-        SetProperty(
-            auditLog,
-            new[] { "EntityName", "EntityType", "TableName" },
-            entityName);
-
-        SetProperty(
-            auditLog,
-            new[] { "Details", "Description", "Message" },
-            details);
-
-        SetDateProperty(
-            auditLog,
-            new[] { "CreatedAt", "Timestamp", "Date" },
-            DateTime.UtcNow);
-
-        _dbContext.AuditLogs.Add(auditLog);
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public Task RecordAsync(
@@ -58,112 +55,44 @@ public sealed class AuditService
         string? details = null,
         CancellationToken cancellationToken = default)
     {
-        return LogAsync(
-            action,
-            entityName,
-            details,
-            cancellationToken);
+        return LogAsync(action, entityName, details, true, cancellationToken);
     }
 
-    private static void SetProperty(
-        object target,
-        string[] propertyNames,
-        object? value)
+    private AuditLog CreateLog(
+        string action,
+        string? entityName,
+        string? details,
+        string? usernameOverride,
+        int? userIdOverride)
     {
-        if (value is null)
+        var httpContext = _httpContextAccessor.HttpContext;
+        var now = DateTime.UtcNow;
+        var claimUserIdValue = httpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int.TryParse(claimUserIdValue, out var claimUserId);
+        var identityUsername = httpContext?.User.Identity?.Name;
+        var remoteIpAddress = httpContext?.Connection?.RemoteIpAddress?.ToString();
+
+        return new AuditLog
         {
-            return;
-        }
-
-        foreach (var propertyName in propertyNames)
-        {
-            var property = target.GetType().GetProperty(
-                propertyName,
-                BindingFlags.Instance
-                | BindingFlags.Public
-                | BindingFlags.IgnoreCase);
-
-            if (property is null || !property.CanWrite)
-            {
-                continue;
-            }
-
-            try
-            {
-                var targetType = Nullable.GetUnderlyingType(
-                    property.PropertyType)
-                    ?? property.PropertyType;
-
-                object convertedValue;
-
-                if (targetType == typeof(string))
-                {
-                    convertedValue = Convert.ToString(
-                        value,
-                        CultureInfo.InvariantCulture) ?? string.Empty;
-                }
-                else if (targetType.IsEnum)
-                {
-                    convertedValue = Enum.Parse(
-                        targetType,
-                        value.ToString()!,
-                        ignoreCase: true);
-                }
-                else
-                {
-                    convertedValue = Convert.ChangeType(
-                        value,
-                        targetType,
-                        CultureInfo.InvariantCulture);
-                }
-
-                property.SetValue(target, convertedValue);
-                return;
-            }
-            catch
-            {
-                // اگر property با نوع مقدار سازگار نبود،
-                // property بعدی بررسی می‌شود.
-            }
-        }
+            UserId = userIdOverride ?? (claimUserId > 0 ? claimUserId : null),
+            Username = Normalize(
+                string.IsNullOrWhiteSpace(usernameOverride) ? identityUsername : usernameOverride,
+                UsernameMaxLength),
+            AtUtc = now,
+            Action = Normalize(action, ActionMaxLength, "Unknown"),
+            Details = Normalize(details, DetailsMaxLength),
+            IpAddress = Normalize(remoteIpAddress, IpAddressMaxLength),
+            CreatedAtUtc = now
+        };
     }
 
-    private static void SetDateProperty(
-        object target,
-        string[] propertyNames,
-        DateTime value)
+    private static string Normalize(string? value, int maxLength, string? defaultValue = null)
     {
-        foreach (var propertyName in propertyNames)
+        if (string.IsNullOrWhiteSpace(value))
         {
-            var property = target.GetType().GetProperty(
-                propertyName,
-                BindingFlags.Instance
-                | BindingFlags.Public
-                | BindingFlags.IgnoreCase);
-
-            if (property is null || !property.CanWrite)
-            {
-                continue;
-            }
-
-            try
-            {
-                if (property.PropertyType == typeof(DateTime))
-                {
-                    property.SetValue(target, value);
-                    return;
-                }
-
-                if (property.PropertyType == typeof(DateTime?))
-                {
-                    property.SetValue(target, (DateTime?)value);
-                    return;
-                }
-            }
-            catch
-            {
-                // در صورت ناسازگاری، property بعدی بررسی می‌شود.
-            }
+            return defaultValue ?? string.Empty;
         }
+
+        return value.Length <= maxLength ? value : value[..maxLength];
     }
 }

@@ -1,0 +1,42 @@
+@model AttendanceControlSystem_vm.AccountLoginViewModel
+@{
+    ViewData["Title"] = "ورود";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ورود به سامانه</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <h1>ورود به سامانه</h1>
+        <form asp-controller="Account" asp-action="Login" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ReturnUrl" />
+            <div class="form-group">
+                <label asp-for="Username"></label>
+                <input asp-for="Username" placeholder="نام کاربری" />
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Password"></label>
+                <input asp-for="Password" placeholder="رمز عبور" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="form-group checkbox">
+                <input asp-for="RememberMe" />
+                <label asp-for="RememberMe">مرا به خاطر بسپار</label>
+            </div>
+            <button type="submit" class="btn btn-primary">ورود</button>
+        </form>
+    </div>
+    <script src="~/js/site.js"></script>
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+    }
+</body>
+</html>

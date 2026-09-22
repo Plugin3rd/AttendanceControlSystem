@@ -1,0 +1,127 @@
+@model AttendanceControlSystem_vm.DashboardViewModel
+@{
+    ViewData["Title"] = "داشبورد";
+    var maxListSize = (int?)(ViewBag.MaximumListSize) ?? 10;
+}
+<h2>داشبورد</h2>
+<p>آمار امروز: @((DateTime)ViewBag.TodayStart).ToString("yyyy/MM/dd") تا @((DateTime)ViewBag.TodayEnd).ToString("yyyy/MM/dd HH:mm:ss")</p>
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <h3>تعداد افراد فعال</h3>
+        <p class="stat-number">@Model.ActivePeople</p>
+    </div>
+    <div class="stat-card">
+        <h3>تعداد واحدهای فعال</h3>
+        <p class="stat-number">@Model.ActiveUnits</p>
+    </div>
+    <div class="stat-card">
+        <h3>ورودهای امروز</h3>
+        <p class="stat-number">@Model.TodayEntries</p>
+    </div>
+    <div class="stat-card">
+        <h3>خروج‌های امروز</h3>
+        <p class="stat-number">@Model.TodayExits</p>
+    </div>
+    <div class="stat-card">
+        <h3>افراد حاضر</h3>
+        <p class="stat-number">@Model.PresentCount</p>
+    </div>
+    <div class="stat-card">
+        <h3>کاربران فعال</h3>
+        <p class="stat-number">@Model.ActiveUsers</p>
+    </div>
+</div>
+<h3>آخرین ورودها (حداکثر @maxListSize مورد)</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>نام</th>
+            <th>کد ملی</th>
+            <th>واحد</th>
+            <th>زمان ورود</th>
+            <th>وضعیت</th>
+            <th>عملیات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.RecentEntries)
+        {
+            <tr>
+                <td>@(item.Person?.FirstName ?? "") @(item.Person?.LastName ?? "")</td>
+                <td>@(item.Person?.NationalId ?? "")</td>
+                <td>@(item.Unit?.Name ?? "-")</td>
+                <td>@item.EntryAtUtc.ToString("yyyy/MM/dd HH:mm")</td>
+                <td>@(item.ExitAtUtc is null ? "حاضر" : "خروج داده")</td>
+                <td><a asp-controller="Attendance" asp-action="Details" asp-route-id="@item.Id">جزئیات</a></td>
+            </tr>
+        }
+        @if (!Model.RecentEntries.Any())
+        {
+            <tr><td colspan="6">رکوردی یافت نشد.</td></tr>
+        }
+    </tbody>
+</table>
+<h3>فهرست افراد حاضر (حداکثر @maxListSize مورد)</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>نام</th>
+            <th>کد ملی</th>
+            <th>واحد</th>
+            <th>زمان ورود</th>
+            <th>عملیات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.PresentPeople)
+        {
+            <tr>
+                <td>@(item.Person?.FirstName ?? "") @(item.Person?.LastName ?? "")</td>
+                <td>@(item.Person?.NationalId ?? "")</td>
+                <td>@(item.Unit?.Name ?? "-")</td>
+                <td>@item.EntryAtUtc.ToString("yyyy/MM/dd HH:mm")</td>
+                <td><a asp-controller="Attendance" asp-action="Details" asp-route-id="@item.Id">جزئیات</a></td>
+            </tr>
+        }
+        @if (!Model.PresentPeople.Any())
+        {
+            <tr><td colspan="5">فردی حاضر نیست.</td></tr>
+        }
+    </tbody>
+</table>
+<h3>کاربران فعال (حداکثر @maxListSize مورد)</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>نام کاربری</th>
+            <th>نقش</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model.ActiveUserList)
+        {
+            <tr>
+                <td>@user.Username</td>
+                <td>@user.Role</td>
+            </tr>
+        }
+        @if (!Model.ActiveUserList.Any())
+        {
+            <tr><td colspan="2">کاربر فعالی یافت نشد.</td></tr>
+        }
+    </tbody>
+</table>
+<h3>لینک‌های سریع</h3>
+<div class="quick-links">
+    <a asp-controller="Attendance" asp-action="Create">ثبت ورود</a>
+    <a asp-controller="People" asp-action="Create">افزودن فرد</a>
+    <a asp-controller="Reports" asp-action="Index">مشاهده گزارشات</a>
+</div>
+@if (Model.IsAdmin)
+{
+    <div class="admin-links">
+        <h3>مدیریت</h3>
+        <a asp-controller="Users" asp-action="Index">مدیریت کاربران</a>
+        <a asp-controller="Backup" asp-action="Index">پشتیبان‌گیری</a>
+    </div>
+}

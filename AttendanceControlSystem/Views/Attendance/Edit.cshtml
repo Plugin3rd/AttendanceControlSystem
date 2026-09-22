@@ -1,0 +1,33 @@
+@model AttendanceControlSystem_vm.AttendanceEditViewModel
+@{
+    ViewData["Title"] = "ثبت خروج";
+    var defaultExitTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
+}
+<h2>ثبت خروج</h2>
+<div class="record-summary">
+    <strong>@Model.PersonName</strong>
+    <span>کد ملی: @Model.NationalId</span>
+    <span>زمان ورود: @Model.EntryAtUtc.ToString("yyyy/MM/dd HH:mm")</span>
+</div>
+<form asp-controller="Attendance" asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="form-group">
+        <label for="exitAtUtc">زمان خروج (UTC)</label>
+        <input type="datetime-local" id="exitAtUtc" name="exitAtUtc" value="@defaultExitTime" />
+        <span class="text-danger">@Html.ValidationMessage("exitAtUtc")</span>
+    </div>
+    <div class="form-group">
+        <label asp-for="ExitDescription"></label>
+        <input asp-for="ExitDescription" maxlength="500" />
+        <span asp-validation-for="ExitDescription" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Note"></label>
+        <input asp-for="Note" maxlength="1000" />
+        <span asp-validation-for="Note" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">ثبت خروج</button>
+    <a asp-controller="Attendance" asp-action="Index">بازگشت</a>
+</form>

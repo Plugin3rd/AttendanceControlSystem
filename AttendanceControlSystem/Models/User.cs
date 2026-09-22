@@ -23,20 +23,17 @@ public sealed class User
 
     public bool IsActive { get; set; } = true;
 
-    public string SecurityStamp { get; set; } =
-        Guid.NewGuid().ToString("N");
+    public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
 
-    public DateTime CreatedAtUtc { get; set; } =
-        DateTime.UtcNow;
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime? LastLoginAtUtc { get; set; }
 
-    public bool IsLocked { get; set; } = false;
+    public bool IsLocked { get; set; }
 
     public DateTime? LastActivityAt { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? LockedAt { get; set; }
-
 }

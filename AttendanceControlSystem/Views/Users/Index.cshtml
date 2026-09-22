@@ -1,0 +1,76 @@
+@model IEnumerable<AttendanceControlSystem.Models.User>
+@{
+    ViewData["Title"] = "کاربران";
+    var currentUserId = (int?)ViewBag.CurrentUserId;
+    var activeAdminCount = (int?)ViewBag.ActiveAdminCount ?? 0;
+}
+
+<h2>کاربران</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success" role="alert">@TempData["Success"]</div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
+}
+
+<p>
+    <a asp-controller="Users" asp-action="Create" class="btn btn-primary">افزودن کاربر</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>نام کاربری</th>
+            <th>نقش</th>
+            <th>وضعیت</th>
+            <th>عملیات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            var isCurrentUser = currentUserId == item.Id;
+            var isAdmin = item.Role == AttendanceControlSystem.Models.UserRole.Admin;
+            var canDelete = !isCurrentUser && (!isAdmin || !item.IsActive || activeAdminCount > 1);
+
+            <tr>
+                <td>
+                    @item.Username
+                    @if (isCurrentUser)
+                    {
+                        <span class="badge badge-info">کاربر جاری</span>
+                    }
+                </td>
+                <td>@(isAdmin ? "مدیر (Admin)" : "اپراتور (Operator)")</td>
+                <td>
+                    @if (item.IsActive)
+                    {
+                        <span class="badge badge-success">فعال</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">غیرفعال</span>
+                    }
+                </td>
+                <td>
+                    <a asp-controller="Users" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                    <a asp-controller="Users" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">جزئیات</a>
+                    @if (canDelete)
+                    {
+                        <form asp-controller="Users" asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('این کاربر به‌صورت نرم غیرفعال می‌شود. ادامه می‌دهید؟')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">حذف نرم</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span class="text-muted">حذف نرم غیرفعال</span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

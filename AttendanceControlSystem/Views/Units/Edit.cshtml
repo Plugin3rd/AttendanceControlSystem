@@ -1,0 +1,26 @@
+@model AttendanceControlSystem_vm.UnitEditViewModel
+@{
+    ViewData["Title"] = "ویرایش واحد";
+}
+<h2>ویرایش واحد</h2>
+<form asp-controller="Units" asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        <input asp-for="Description" />
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+    <div class="form-group checkbox">
+        <input asp-for="IsActive" />
+        <label asp-for="IsActive"></label>
+    </div>
+    <button type="submit" class="btn btn-primary">ذخیره</button>
+    <a asp-controller="Units" asp-action="Index">بازگشت</a>
+</form>
